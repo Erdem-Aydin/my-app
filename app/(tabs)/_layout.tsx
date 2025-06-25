@@ -7,7 +7,7 @@ export default function TabsLayout() {
     <PaperProvider>
       <Tabs>
         <Tabs.Screen
-          name="students"
+          name="index"
           options={{
             title: 'Öğrenciler',
             headerShown: false,
