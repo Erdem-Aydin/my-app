@@ -1,8 +1,5 @@
 {
   "expo": {
-    "assetBundlePatterns": [
-      "**/*"
-    ],
     "name": "my-app",
     "slug": "my-app",
     "version": "1.0.0",
@@ -11,6 +8,10 @@
     "scheme": "myapp",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
+    "assetBundlePatterns": [
+      "**/*",
+      "node_modules/@expo/vector-icons/build/vendor/react-native-vector-icons/Fonts/*" 
+    ],
     "ios": {
       "supportsTablet": true
     },
@@ -37,7 +38,8 @@
           "backgroundColor": "#ffffff"
         }
       ],
-      "expo-font"
+      "expo-font",
+      "expo-asset"
     ],
     "experiments": {
       "typedRoutes": true
