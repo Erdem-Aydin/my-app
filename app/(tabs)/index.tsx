@@ -1,11 +1,12 @@
-import { useState } from 'react';
-import { View, FlatList, TouchableOpacity } from 'react-native';
+import { useState, useCallback } from 'react';
+import { View, FlatList, TouchableOpacity, Platform } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Text, Card, FAB, Appbar, Checkbox } from 'react-native-paper';
-import { useFocusEffect, useRouter } from 'expo-router';
+import { useRouter } from 'expo-router';
 import type { Student } from '../../types/student';
 import { STORAGE_KEY } from '@/constants/storage';
 import { calculateRemainingClasses } from '@/utils/student-utils';
+import { useFocusEffect } from '@react-navigation/native';
 
 export default function StudentListScreen() {
   const [students, setStudents] = useState<Student[]>([]);
@@ -13,31 +14,43 @@ export default function StudentListScreen() {
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const router = useRouter();
 
-  useFocusEffect(() => {
-    const loadStudents = async () => {
-      const stored = await AsyncStorage.getItem(STORAGE_KEY);
-      if (stored) {
-        setStudents(JSON.parse(stored));
-      }
-    };
-    loadStudents();
-  });
+  useFocusEffect(
+    useCallback(() => {
+      const loadStudents = async () => {
+        try {
+          if (typeof window !== 'undefined') {
+            const stored = await AsyncStorage.getItem(STORAGE_KEY);
+            if (stored) {
+              setStudents(JSON.parse(stored));
+            }
+          }
+        } catch (e) {
+          console.error('Öğrenciler yüklenemedi:', e);
+        }
+      };
+      loadStudents();
+    }, [])
+  );
 
   const deleteSelectedStudents = async () => {
-    const stored = await AsyncStorage.getItem(STORAGE_KEY);
-    const current: Student[] = stored ? JSON.parse(stored) : [];
-    const filtered = current.filter(s => !selectedIds.includes(s.id));
-    await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(filtered));
-    setStudents(filtered);
-    setSelectionMode(false);
-    setSelectedIds([]);
+    try {
+      const stored = await AsyncStorage.getItem(STORAGE_KEY);
+      const current: Student[] = stored ? JSON.parse(stored) : [];
+      const filtered = current.filter(s => !selectedIds.includes(s.id));
+      await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(filtered));
+      setStudents(filtered);
+      setSelectionMode(false);
+      setSelectedIds([]);
+    } catch (e) {
+      console.error('Silme hatası:', e);
+    }
   };
 
   return (
     <View style={{ flex: 1 }}>
       <Appbar.Header>
         <Appbar.Content title="Öğrenciler" />
-        {selectionMode ? (
+        {selectionMode && (
           <>
             <Appbar.Action icon="delete" onPress={deleteSelectedStudents} />
             <Appbar.Action icon="close" onPress={() => {
@@ -45,7 +58,7 @@ export default function StudentListScreen() {
               setSelectedIds([]);
             }} />
           </>
-        ) : null}
+        )}
       </Appbar.Header>
 
       <View style={{ flex: 1, padding: 16 }}>
@@ -68,7 +81,7 @@ export default function StudentListScreen() {
                     setSelectedIds(prev => [...prev, item.id]);
                   }
                 } else {
-                  router.push(`../(screens)/student-detail?id=${item.id}`);
+                  router.push(`/student-detail?id=${item.id}`);
                 }
               }}
             >
@@ -107,7 +120,7 @@ export default function StudentListScreen() {
           <FAB
             icon="plus"
             label="Öğrenci Ekle"
-            onPress={() => router.push('../(screens)/add-student')}
+            onPress={() => router.push('/add-student')}
             style={{ position: 'absolute', right: 16, bottom: 16 }}
           />
         )}

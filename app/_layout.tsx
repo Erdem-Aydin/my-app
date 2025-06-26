@@ -6,6 +6,7 @@ import 'react-native-reanimated';
 import { PaperProvider } from 'react-native-paper';
 
 
+
 import { useColorScheme } from '@/hooks/useColorScheme';
 
 export default function RootLayout() {

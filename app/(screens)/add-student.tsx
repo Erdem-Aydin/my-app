@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { ScrollView, View, Alert } from 'react-native';
+import { ScrollView, View } from 'react-native'; // Alert'ı buradan kaldırdık
 import { useRouter } from 'expo-router';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import {
@@ -7,8 +7,15 @@ import {
   TextInput,
   Button,
   SegmentedButtons,
+  // Yeni ekleyeceğimiz bileşenler: Dialog, Portal, Provider
+  Dialog,
+  Portal,
+  Provider, // Provider'ı genellikle App.tsx/_layout.tsx içinde tanımlarız, ama burada sadece bu ekran için de tanımlayabiliriz.
+            // Eğer zaten _layout.tsx içinde tanımlıysa, buradan Provider'ı kaldırırsınız.
 } from 'react-native-paper';
-import DateTimePicker from '@react-native-community/datetimepicker';
+
+import MyDateTimePicker from '../../components/MyDateTimePicker';
+
 import type { Student, StudentType, Weekday } from '../../types/student';
 import { calculateRemainingClasses } from '@/utils/student-utils';
 
@@ -33,6 +40,21 @@ export default function AddStudentScreen() {
   const [lastPaidDate, setLastPaidDate] = useState(new Date());
   const [showDatePicker, setShowDatePicker] = useState(false);
 
+  // Dialog (Uyarı Mesajı) için yeni state'ler
+  const [dialogVisible, setDialogVisible] = useState(false);
+  const [dialogTitle, setDialogTitle] = useState('');
+  const [dialogMessage, setDialogMessage] = useState('');
+
+  const showDialog = (title: string, message: string) => {
+    setDialogTitle(title);
+    setDialogMessage(message);
+    setDialogVisible(true);
+  };
+
+  const hideDialog = () => {
+    setDialogVisible(false);
+  };
+
   const getWeekdayFromDate = (date: Date): Weekday => {
     const jsDay = date.getDay(); // 0 (Pazar) to 6 (Cumartesi)
     const dayMap: Weekday[] = [
@@ -49,18 +71,19 @@ export default function AddStudentScreen() {
 
   const handleSubmit = async () => {
     if (!name.trim()) {
-      Alert.alert('Eksik Bilgi', 'Lütfen öğrencinin adını girin.');
+      // Alert.alert yerine showDialog kullanıyoruz
+      showDialog('Eksik Bilgi', 'Lütfen öğrencinin adını girin.');
       return;
     }
 
     if (!day || !type) {
-      Alert.alert('Eksik Bilgi', 'Lütfen tip ve gün alanlarını seçin.');
+      showDialog('Eksik Bilgi', 'Lütfen tip ve gün alanlarını seçin.');
       return;
     }
 
     const selectedDay = getWeekdayFromDate(lastPaidDate);
     if (selectedDay !== day) {
-      Alert.alert(
+      showDialog(
         'Geçersiz Tarih',
         `Seçtiğiniz tarih ${selectedDay}, ama ders günü ${day}. Lütfen uygun bir tarih seçin.`
       );
@@ -80,80 +103,100 @@ export default function AddStudentScreen() {
       RemainingClassCount: Infinity,
     };
 
-    
     const remaining = calculateRemainingClasses(newStudent);
     newStudent.RemainingClassCount = remaining;
 
+    try {
+      const stored = await AsyncStorage.getItem(STORAGE_KEY);
+      const current: Student[] = stored ? JSON.parse(stored) : [];
+      const updated = [...current, newStudent];
 
-    const stored = await AsyncStorage.getItem(STORAGE_KEY);
-    const current: Student[] = stored ? JSON.parse(stored) : [];
-    const updated = [...current, newStudent];
-
-    await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
-    router.back();
+      await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
+      router.back();
+    } catch (error) {
+      console.error("Öğrenci kaydederken hata oluştu:", error);
+      showDialog('Hata', 'Öğrenci kaydedilirken bir sorun oluştu. Lütfen tekrar deneyin.');
+    }
   };
 
+  const onDateChange = (event: any, selectedDate?: Date) => {
+    setShowDatePicker(false);
+    if (selectedDate) {
+      setLastPaidDate(selectedDate);
+    }
+  };
 
   return (
-    <ScrollView contentContainerStyle={{ padding: 16 }}>
-      <Text variant="headlineSmall" style={{ marginBottom: 12 }}>Yeni Öğrenci Ekle</Text>
+    // Provider, Dialog'un doğru şekilde render edilmesi için gereklidir.
+    // Genellikle uygulamanızın en üst seviyesinde (App.tsx veya _layout.tsx) tanımlanır.
+    // Eğer orada zaten tanımlıysa, bu Provider'ı kaldırabilirsiniz.
+    <Provider>
+      <ScrollView contentContainerStyle={{ padding: 16 }}>
+        <Text variant="headlineSmall" style={{ marginBottom: 12 }}>Yeni Öğrenci Ekle</Text>
 
-      <TextInput
-        label="Öğrenci Adı"
-        value={name}
-        onChangeText={setName}
-        style={{ marginBottom: 12 }}
-      />
-
-      <SegmentedButtons
-        value={type}
-        onValueChange={(val) => setType(val as StudentType)}
-        buttons={[
-          { value: 'bireysel', label: 'Bireysel' },
-          { value: 'grup', label: 'Grup' },
-        ]}
-        style={{ marginBottom: 12 }}
-      />
-
-      <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 6, marginBottom: 12 }}>
-        {turkishDays.map((d) => (
-          <Button
-            key={d}
-            mode={day === d ? 'contained' : 'outlined'}
-            onPress={() => setDay(d)}
-            style={{ margin: 4 }}
-          >
-            {d}
-          </Button>
-        ))}
-      </View>
-
-
-      <Button
-        mode="outlined"
-        onPress={() => setShowDatePicker(true)}
-        style={{ marginBottom: 12 }}
-      >
-        Son Ödeme Tarihi: {lastPaidDate.toLocaleDateString()}
-      </Button>
-
-      {showDatePicker && (
-        <DateTimePicker
-          value={lastPaidDate}
-          mode="date"
-          display="default"
-          onChange={(event, selectedDate) => {
-            setShowDatePicker(false);
-            if (selectedDate) {
-              setLastPaidDate(selectedDate);
-            }
-          }}
+        <TextInput
+          label="Öğrenci Adı"
+          value={name}
+          onChangeText={setName}
+          style={{ marginBottom: 12 }}
         />
-      )}
 
-      <Button mode="contained" onPress={handleSubmit}>
-        Öğrenciyi Ekle
-      </Button>
-    </ScrollView>
+        <SegmentedButtons
+          value={type}
+          onValueChange={(val) => setType(val as StudentType)}
+          buttons={[
+            { value: 'bireysel', label: 'Bireysel' },
+            { value: 'grup', label: 'Grup' },
+          ]}
+          style={{ marginBottom: 12 }}
+        />
+
+        <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 6, marginBottom: 12 }}>
+          {turkishDays.map((d) => (
+            <Button
+              key={d}
+              mode={day === d ? 'contained' : 'outlined'}
+              onPress={() => setDay(d)}
+              style={{ margin: 4 }}
+            >
+              {d}
+            </Button>
+          ))}
+        </View>
+
+        <Button
+          mode="outlined"
+          onPress={() => setShowDatePicker(true)}
+          style={{ marginBottom: 12 }}
+        >
+          Son Ödeme Tarihi: {lastPaidDate.toLocaleDateString()}
+        </Button>
+
+        {showDatePicker && (
+          <MyDateTimePicker
+            value={lastPaidDate}
+            mode="date"
+            onChange={onDateChange}
+          />
+        )}
+
+        <Button mode="contained" onPress={handleSubmit}>
+          Öğrenciyi Ekle
+        </Button>
+      </ScrollView>
+
+      {/* Dialog Bileşeni */}
+      <Portal>
+        <Dialog visible={dialogVisible} onDismiss={hideDialog}>
+          <Dialog.Title>{dialogTitle}</Dialog.Title>
+          <Dialog.Content>
+            <Text variant="bodyMedium">{dialogMessage}</Text>
+          </Dialog.Content>
+          <Dialog.Actions>
+            <Button onPress={hideDialog}>Tamam</Button>
+          </Dialog.Actions>
+        </Dialog>
+      </Portal>
+    </Provider>
   );
 }

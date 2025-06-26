@@ -1,0 +1,137 @@
+/* custom-datepicker.css */
+
+/* Varsayılan stil dosyasını da içe aktarın, bizim stillerimiz onu ezecektir. */
+@import 'react-datepicker/dist/react-datepicker.css';
+
+/* Genel Takvim Kutusu */
+.react-datepicker {
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; /* Daha modern bir font */
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15); /* Daha belirgin bir gölge */
+  overflow: hidden; /* Köşelerin düzgün görünmesi için */
+  background-color: #fff;
+  padding: 10px; /* İç boşluk */
+}
+
+/* Takvim Başlığı (Ay ve Yıl) */
+.react-datepicker__header {
+  background-color: #f8f9fa; /* Açık gri arka plan */
+  border-bottom: 1px solid #e9ecef; /* Alt çizgi */
+  padding: 12px 0;
+  border-top-left-radius: 6px;
+  border-top-right-radius: 6px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.react-datepicker__current-month {
+  font-size: 1.1em;
+  font-weight: 600; /* Daha kalın font */
+  color: #343a40; /* Koyu gri yazı */
+}
+
+/* Navigasyon Okları */
+.react-datepicker__navigation {
+  background: none;
+  border: none;
+  color: #6c757d; /* Gri ok rengi */
+  cursor: pointer;
+  font-size: 1.5em; /* Daha büyük oklar */
+  padding: 5px 10px;
+  transition: color 0.2s ease-in-out;
+}
+
+.react-datepicker__navigation:hover {
+  color: #007bff; /* Hover rengi */
+}
+
+/* Haftanın Günleri Başlıkları (Pzt, Salı vb.) */
+.react-datepicker__day-names {
+  display: flex;
+  justify-content: space-around;
+  margin-top: 10px;
+  margin-bottom: 5px;
+}
+
+.react-datepicker__day-name {
+  color: #6c757d;
+  font-size: 0.9em;
+  font-weight: 500;
+  width: 36px; /* Her gün başlığı için sabit genişlik */
+  text-align: center;
+}
+
+/* Günler */
+.react-datepicker__week {
+  display: flex;
+  justify-content: space-around;
+}
+
+.react-datepicker__day {
+  color: #495057; /* Varsayılan gün rengi */
+  font-size: 1em;
+  width: 36px; /* Her gün hücresi için sabit genişlik */
+  height: 36px; /* Her gün hücresi için sabit yükseklik */
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  border-radius: 50%; /* Yuvarlak günler */
+  cursor: pointer;
+  transition: background-color 0.2s ease-in-out, color 0.2s ease-in-out;
+}
+
+.react-datepicker__day:hover {
+  background-color: #e2f0fe; /* Hover rengi */
+  color: #007bff;
+}
+
+/* Seçili Gün */
+.react-datepicker__day--selected,
+.react-datepicker__day--selected:hover {
+  background-color: #007bff; /* Ana renk */
+  color: white;
+  font-weight: 600;
+}
+
+/* Bugün */
+.react-datepicker__day--today {
+  color: #28a745; /* Yeşil Bugün rengi */
+  font-weight: 600;
+  border: 1px solid #28a745; /* Yeşil kenarlık */
+}
+
+/* Geçmiş/Gelecek ayların günleri */
+.react-datepicker__day--outside-month {
+  color: #ced4da; /* Soluk gri */
+}
+
+/* Disabled günler */
+.react-datepicker__day--disabled {
+  color: #adb5bd;
+  cursor: not-allowed;
+  background-color: transparent;
+}
+
+/* Zaman Seçici (Eğer kullanıyorsanız) */
+.react-datepicker__time-container {
+  border-left: 1px solid #e9ecef;
+  padding: 10px;
+  background-color: #f8f9fa;
+}
+
+.react-datepicker__time-list-item {
+  padding: 8px 10px;
+  font-size: 0.9em;
+  cursor: pointer;
+}
+
+.react-datepicker__time-list-item:hover {
+  background-color: #e2f0fe;
+}
+
+.react-datepicker__time-list-item--selected {
+  background-color: #007bff;
+  color: white;
+}
