@@ -18,11 +18,14 @@ export default function RootLayout() {
   const [fontsLoaded, fontError] = useFonts({
     SpaceMono: require('../assets/fonts/SpaceMono-Regular.ttf'),
     
-    // Bu yolların artık doğru çalışması lazım, çünkü dosyalar pakete dahil edilecek.
+    // Bu yollar, node_modules içindeki orijinal .ttf dosyalarına işaret etmeli.
+    // app.json'daki assetBundlePatterns sayesinde bu dosyalar deploy'da bulunabilir olacak.
     'MaterialCommunityIcons': require('@expo/vector-icons/build/vendor/react-native-vector-icons/Fonts/MaterialCommunityIcons.ttf'),
     'MaterialIcons': require('@expo/vector-icons/build/vendor/react-native-vector-icons/Fonts/MaterialIcons.ttf'),
     'FontAwesome': require('@expo/vector-icons/build/vendor/react-native-vector-icons/Fonts/FontAwesome.ttf'),
     'Ionicons': require('@expo/vector-icons/build/vendor/react-native-vector-icons/Fonts/Ionicons.ttf'),
+    // Eğer kullanıyorsan diğer ikon fontlarını da buraya ekle (Entypo, AntDesign vb.)
+    // 'Entypo': require('@expo/vector-icons/build/vendor/react-native-vector-icons/Fonts/Entypo.ttf'),
   });
 
   useEffect(() => {
