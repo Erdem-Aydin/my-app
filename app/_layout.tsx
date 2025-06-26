@@ -1,15 +1,18 @@
 // app/_layout.tsx
 import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native';
-import { useFonts } from 'expo-font'; // useFonts hook'unu import ediyoruz
+import { useFonts } from 'expo-font';
 import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import 'react-native-reanimated';
 import { PaperProvider } from 'react-native-paper';
-import * as SplashScreen from 'expo-splash-screen'; // SplashScreen'ı import ediyoruz
-import { useEffect } from 'react'; // useEffect'i import ediyoruz
-
+import * as SplashScreen from 'expo-splash-screen';
+import { useEffect } from 'react';
 
 import { useColorScheme } from '@/hooks/useColorScheme';
+
+// MaterialCommunityIcons'ın kendisini doğrudan import edelim,
+// Bu bazen font dosyasının yolunu otomatik olarak bulmasına yardımcı olabilir.
+import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 
 // Sıçrama ekranının otomatik gizlenmesini engelle
 SplashScreen.preventAutoHideAsync();
@@ -17,34 +20,32 @@ SplashScreen.preventAutoHideAsync();
 export default function RootLayout() {
   const colorScheme = useColorScheme();
 
-  // İkon fontlarını ve diğer özel fontları yüklüyoruz
   const [fontsLoaded, fontError] = useFonts({
-    // Mevcut fontunuzu koruyalım
     SpaceMono: require('../assets/fonts/SpaceMono-Regular.ttf'),
     
-    // React Native Paper ve @expo/vector-icons için gerekli ikon fontları
-    // MaterialCommunityIcons, çoğu ikonunuzu ve Paper'ın bazı bileşenlerini kapsar.
-    'MaterialCommunityIcons': require('@expo/vector-icons/build/vendor/react-native-vector-icons/Fonts/MaterialCommunityIcons.ttf'),
-    // MaterialIcons, Paper'ın varsayılan ikon seti olabilir ve Checkbox gibi yerlerde kullanılır.
+    // YENİ YAKLAŞIM: MaterialCommunityIcons'ın kendisinden fontu almayı deneyelim
+    // Bu, paketin kendi içindeki yol çözme mekanizmasını kullanır.
+    'MaterialCommunityIcons': MaterialCommunityIcons.font,
+    
+    // Paper'ın varsayılan ikon fontu: MaterialIcons veya başka bir şey olabilir.
+    // Varsayılan olarak MaterialIcons'ı da yükleyelim ki Paper bileşenleri (checkbox gibi) düzgün çalışsın.
+    // Eğer MaterialCommunityIcons ile çalışmazsa, Paper'ın kendi ayarını kullanabiliriz:
+    // https://callstack.github.io/react-native-paper/docs/guides/icons/
     'MaterialIcons': require('@expo/vector-icons/build/vendor/react-native-vector-icons/Fonts/MaterialIcons.ttf'),
-    // Eğer Ionicons veya FontAwesome da kullanıyorsanız, onları da buraya eklemelisiniz.
-    // 'Ionicons': require('@expo/vector-icons/build/vendor/react-native-vector-icons/Fonts/Ionicons.ttf'),
-    // 'FontAwesome': require('@expo/vector-icons/build/vendor/react-native-vector-icons/Fonts/FontAwesome.ttf'),
+    'FontAwesome': require('@expo/vector-icons/build/vendor/react-native-vector-icons/Fonts/FontAwesome.ttf'),
+    'Ionicons': require('@expo/vector-icons/build/vendor/react-native-vector-icons/Fonts/Ionicons.ttf'),
   });
 
-  // Fontlar yüklendiğinde veya bir hata oluştuğunda SplashScreen'ı gizle
   useEffect(() => {
     if (fontsLoaded || fontError) {
       SplashScreen.hideAsync();
     }
   }, [fontsLoaded, fontError]);
 
-  // Fontlar yüklenene kadar hiçbir şey gösterme
   if (!fontsLoaded && !fontError) {
     return null;
   }
 
-  // Fontlar yüklendikten sonra uygulamayı render et
   return (
     <PaperProvider>
       <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
