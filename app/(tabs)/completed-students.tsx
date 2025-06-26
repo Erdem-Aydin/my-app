@@ -1,6 +1,6 @@
 // app/(tabs)/completed-students.tsx
-import { useEffect, useState, useCallback } from 'react';
-import { View, FlatList, Dimensions } from 'react-native'; // Dimensions eklendi
+import { useState, useCallback } from 'react';
+import { View, FlatList, Dimensions, Platform } from 'react-native'; // Platform eklendi
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Appbar, Card, Checkbox, Text, Button, Surface } from 'react-native-paper';
 import { useRouter, useFocusEffect } from 'expo-router';
@@ -86,7 +86,7 @@ export default function CompletedStudentsPage() {
 
     await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
     setSelectedIds([]);
-    await loadStudents(); // UI'nin hemen güncellenmesi için
+    await loadStudents();
   };
 
   const getFee = (student: Student) =>
@@ -107,6 +107,43 @@ export default function CompletedStudentsPage() {
     }
   };
 
+  // FlatList'in başlık kısmı
+  const ListHeader = () => (
+    <View style={{ padding: 16 }}>
+      <Surface style={{ margin: 16, padding: 16, borderRadius: 8, elevation: 2 }}>
+        <Text variant="titleMedium" style={{ fontWeight: 'bold' }}>
+          Toplam alınacak ücret: {totalFeeAll} TL
+        </Text>
+        <Text variant="titleMedium" style={{ fontWeight: 'bold', marginTop: 4 }}>
+          Toplam öğrenci sayısı: {completedStudents.length}
+        </Text>
+        <Text variant="titleMedium" style={{ fontWeight: 'bold', marginTop: 4 }}>
+          Seçili öğrencilerden alınacak: {totalFeeSelected} TL
+        </Text>
+      </Surface>
+
+      <Button
+        onPress={toggleSelectAll}
+        style={{ marginTop: 10 }}
+        mode="outlined"
+      >
+        {allSelected ? 'Tüm Seçimleri Kaldır' : 'Tümünü Seç'}
+      </Button>
+    </View>
+  );
+
+  // FlatList'in alt kısmındaki buton
+  const ListFooter = () => (
+    <Button
+      mode="contained"
+      onPress={handlePayment}
+      disabled={selectedIds.length === 0}
+      style={{ margin: 16, marginBottom: Platform.OS === 'ios' ? 30 : 16 }} // iOS için alt boşluk eklendi
+    >
+      Ödeme Alındı ({selectedIds.length})
+    </Button>
+  );
+
   return (
     <View style={{ flex: 1 }}>
       <Appbar.Header>
@@ -118,97 +155,67 @@ export default function CompletedStudentsPage() {
       </Appbar.Header>
 
       {isReady && (
-        <>
-          <View style={{ padding: 16 }}>
-            <Surface style={{ margin: 16, padding: 16, borderRadius: 8, elevation: 2 }}>
-              <Text variant="titleMedium" style={{ fontWeight: 'bold' }}>
-                Toplam alınacak ücret: {totalFeeAll} TL
-              </Text>
-              <Text variant="titleMedium" style={{ fontWeight: 'bold', marginTop: 4 }}>
-                Toplam öğrenci sayısı: {completedStudents.length}
-              </Text>
-              <Text variant="titleMedium" style={{ fontWeight: 'bold', marginTop: 4 }}>
-                Seçili öğrencilerden alınacak: {totalFeeSelected} TL
-              </Text>
-            </Surface>
-
-            <Button
-              onPress={toggleSelectAll}
-              style={{ marginTop: 10 }}
-              mode="outlined"
-            >
-              {allSelected ? 'Tüm Seçimleri Kaldır' : 'Tümünü Seç'}
-            </Button>
-          </View>
-
-          <FlatList
-            data={completedStudents.sort((a, b) =>
-              a.StudentName.localeCompare(b.StudentName)
-            )}
-            keyExtractor={item => item.id}
-            renderItem={({ item }) => (
-              <Card style={{ margin: 10 }}>
-                {/* Burası güncellendi: Card.Title yerine Card.Content kullanılıyor */}
-                <Card.Content style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
-                  <View style={{ flex: 1, marginRight: 10 }}> 
-                    <Text 
-                      variant={isSmallScreen ? "titleSmall" : "titleMedium"} // Küçük ekranda fontu biraz küçült
-                      numberOfLines={1} 
-                      ellipsizeMode="tail" 
-                      style={{ fontWeight: 'bold' }}
-                    >
-                      {item.StudentName}
-                    </Text>
-                    <Text 
-                      variant={isSmallScreen ? "bodySmall" : "bodyMedium"} // Küçük ekranda alt yazıyı daha da küçült
-                      numberOfLines={1} 
-                      ellipsizeMode="tail" 
-                      style={{ color: 'gray', marginTop: 2 }}
-                    >
-                      {`Tip: ${item.Type} • Gün: ${item.Day} • Kalan: ${calculateRemainingClasses(item)}`}
-                    </Text>
-                  </View>
-                  <Checkbox
-                    status={selectedIds.includes(item.id) ? 'checked' : 'unchecked'}
-                    onPress={() => toggleSelect(item.id)}
-                  />
-                </Card.Content>
-              </Card>
-            )}
-            ListEmptyComponent={() => (
-              <View style={{ 
-                flex: 1, 
-                justifyContent: 'center',
-                alignItems: 'center',
-                marginTop: 50,
-                paddingHorizontal: 20,
+        <FlatList
+          data={completedStudents.sort((a, b) =>
+            a.StudentName.localeCompare(b.StudentName)
+          )}
+          keyExtractor={item => item.id}
+          // Üstteki bileşenleri FlatList'in başlığına ekle
+          ListHeaderComponent={ListHeader} 
+          // Alttaki butonu FlatList'in sonuna ekle
+          ListFooterComponent={completedStudents.length > 0 ? ListFooter : null} // Eğer hiç öğrenci yoksa butonu gösterme
+          renderItem={({ item }) => (
+            <Card style={{ margin: 10 }}>
+              <Card.Content style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+                <View style={{ flex: 1, marginRight: 10 }}> 
+                  <Text 
+                    variant={isSmallScreen ? "titleSmall" : "titleMedium"} 
+                    numberOfLines={1} 
+                    ellipsizeMode="tail" 
+                    style={{ fontWeight: 'bold' }}
+                  >
+                    {item.StudentName}
+                  </Text>
+                  <Text 
+                    variant={isSmallScreen ? "bodySmall" : "bodyMedium"} 
+                    numberOfLines={1} 
+                    ellipsizeMode="tail" 
+                    style={{ color: 'gray', marginTop: 2 }}
+                  >
+                    {`Tip: ${item.Type} • Gün: ${item.Day} • Kalan: ${calculateRemainingClasses(item)}`}
+                  </Text>
+                </View>
+                <Checkbox
+                  status={selectedIds.includes(item.id) ? 'checked' : 'unchecked'}
+                  onPress={() => toggleSelect(item.id)}
+                />
+              </Card.Content>
+            </Card>
+          )}
+          ListEmptyComponent={() => (
+            <View style={{ 
+              flex: 1, 
+              justifyContent: 'center',
+              alignItems: 'center',
+              marginTop: 50,
+              paddingHorizontal: 20,
+            }}>
+              <Text variant="titleMedium" style={{ 
+                  textAlign: 'center',
+                  color: '#6c757d'
               }}>
-                <Text variant="titleMedium" style={{ 
-                    textAlign: 'center',
-                    color: '#6c757d'
-                }}>
-                  Şu an için tamamlanmış dersi olan öğrenci bulunmamaktadır. 🎉
-                </Text>
-                <Text variant="bodyMedium" style={{ 
-                    textAlign: 'center', 
-                    color: '#8d9297', 
-                    marginTop: 10 
-                }}>
-                  Yeni ödemeler yapıldığında burada görünecekler.
-                </Text>
-              </View>
-            )}
-          />
-
-          <Button
-            mode="contained"
-            onPress={handlePayment}
-            disabled={selectedIds.length === 0}
-            style={{ margin: 16 }}
-          >
-            Ödeme Alındı ({selectedIds.length})
-          </Button>
-        </>
+                Şu an için tamamlanmış dersi olan öğrenci bulunmamaktadır. 🎉
+              </Text>
+              <Text variant="bodyMedium" style={{ 
+                  textAlign: 'center', 
+                  color: '#8d9297', 
+                  marginTop: 10 
+              }}>
+                Yeni ödemeler yapıldığında burada görünecekler.
+              </Text>
+            </View>
+          )}
+        />
       )}
     </View>
   );
