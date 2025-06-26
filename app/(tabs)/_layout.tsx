@@ -1,10 +1,12 @@
 // app/(tabs)/_layout.tsx
 import { Tabs } from 'expo-router';
 import { PaperProvider } from 'react-native-paper';
-import { Ionicons } from '@expo/vector-icons'; // Ionicons'u import ediyoruz
+import { MaterialCommunityIcons } from '@expo/vector-icons'; // MaterialCommunityIcons'u import ediyoruz
 
 export default function TabsLayout() {
   return (
+    // PaperProvider zaten RootLayout'ta sarmalandığı için burada tekrar olmasına gerek yok,
+    // ancak sorun çıkarmıyorsa tutabilirsiniz. Eğer hata verirse kaldırın.
     <PaperProvider>
       <Tabs>
         <Tabs.Screen
@@ -13,8 +15,7 @@ export default function TabsLayout() {
             title: 'Öğrenciler',
             headerShown: false,
             tabBarIcon: ({ color, size }) => (
-              // account-multiple yerine people-outline veya people kullanabiliriz
-              <Ionicons name="people-outline" size={size} color={color} /> 
+              <MaterialCommunityIcons name="account-multiple" size={size} color={color} />
             ),
           }}
         />
@@ -24,8 +25,7 @@ export default function TabsLayout() {
             title: 'Tamamlananlar',
             headerShown: false,
             tabBarIcon: ({ color, size }) => (
-              // check-circle-outline yerine checkmark-done-circle-outline veya checkmark-circle-outline kullanabiliriz
-              <Ionicons name="checkmark-circle-outline" size={size} color={color} /> 
+              <MaterialCommunityIcons name="check-circle-outline" size={size} color={color} />
             ),
           }}
         />
